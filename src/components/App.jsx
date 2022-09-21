@@ -1,6 +1,6 @@
-import { Component } from 'react';
+import { useState, useEffect } from 'react';
 
-import PixabayAPIRequest from './PixabayAPI';
+import PixabayAPIRequest from '../PixabayAPI';
 import Button from './ButtonLM';
 import ImageGallery from './ImageGallery/';
 import Searchbar from './Searchbar';
@@ -10,19 +10,21 @@ import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { AppStyled } from './App.styled';
 
-export class App extends Component {
-  state = { query: '', page: 1, totalHits: 0, hits: [], loading: false };
+export const App = () => {
+  const [query, setQuery] = useState(null);
+  const [page, setPage] = useState(1);
+  const [totalHits, setTotalHits] = useState(0);
+  const [hits, setHits] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  componentDidUpdate(past, prevState) {
-    window.scrollBy({
-      top: document.body.clientHeight,
-      behavior: 'smooth',
-    });
-    let { query, page } = this.state;
-    if (prevState.query !== query) {
-      this.formFetch(query);
-    }
-    if (this.state.query === '') {
+  // componentDidUpdate(past, prevState) {
+  // window.scrollBy({
+  //   top: document.body.clientHeight,
+  //   behavior: 'smooth',
+  // });
+
+  useEffect(() => {
+    if (query === '') {
       toast(`🦄 Please enter a request!`, {
         position: 'top-center',
         autoClose: 3000,
@@ -34,49 +36,52 @@ export class App extends Component {
       });
       return;
     }
+    if (query) formFetch(query);
+  }, [query]);
 
-    if (prevState.page !== page && page !== 1) {
-      this.loadMore(prevState, page);
+  useEffect(() => {
+    if (page !== 1) {
+      loadMore(hits, page);
     }
-  }
+    // eslint-disable-next-line
+  }, [page]);
 
-  updateQuery = query => {
-    this.setState({ query });
+  const updateQuery = query => {
+    setQuery(query);
   };
 
-  updatePage = () => {
-    this.setState(({ page }) => ({ page: page + 1 }));
+  const updatePage = () => {
+    setPage(page + 1);
   };
 
-  formFetch = async query => {
+  const formFetch = async query => {
     if (query === '') {
       return;
     } else {
-      this.setState({ loading: true });
+      setLoading(true);
       const { totalHits, hits } = await PixabayAPIRequest(query, 1);
-      this.setState({ totalHits, hits, page: 1, loading: false });
+      setLoading(false);
+      setTotalHits(totalHits);
+      setHits(hits);
+      setPage(1);
     }
   };
 
-  loadMore = async (prevState, page) => {
-    this.setState({ loading: true });
-    const query = this.state.query;
-    const { hits } = await PixabayAPIRequest(query, page);
-    this.setState({ hits: [...prevState.hits, ...hits], page });
-    this.setState({ loading: false });
+  const loadMore = async (prevState, page) => {
+    setLoading(true);
+    const data = await PixabayAPIRequest(query, page);
+    setHits([...hits, ...data.hits]);
+    setPage(page);
+    setLoading(false);
   };
-  render() {
-    const { hits, page, totalHits, loading } = this.state;
-    const maxPage = Math.ceil(+totalHits / 12);
-    return (
-      <AppStyled>
-        <Searchbar updateQuery={this.updateQuery} />
-        <ImageGallery images={hits} imageClick={this.showBigImage} />
-        {page < maxPage && (
-          <Button title="Load more" onClick={this.updatePage} />
-        )}
-        {loading && <Loader />}
-      </AppStyled>
-    );
-  }
-}
+
+  const maxPage = Math.ceil(+totalHits / 12);
+  return (
+    <AppStyled>
+      <Searchbar updateQuery={updateQuery} />
+      <ImageGallery images={hits} />
+      {page < maxPage && <Button title="Load more" onClick={updatePage} />}
+      {loading && <Loader />}
+    </AppStyled>
+  );
+};
