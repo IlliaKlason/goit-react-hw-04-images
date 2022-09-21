@@ -67,7 +67,7 @@ export const App = () => {
     }
   };
 
-  const loadMore = async (prevState, page) => {
+  const loadMore = async (_, page) => {
     setLoading(true);
     const data = await PixabayAPIRequest(query, page);
     setHits([...hits, ...data.hits]);
