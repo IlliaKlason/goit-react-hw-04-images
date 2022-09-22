@@ -75,7 +75,7 @@ export const App = () => {
     setLoading(false);
   };
 
-  const maxPage = Math.ceil(+totalHits / 12);
+  const maxPage = Math.ceil(totalHits / 12);
   return (
     <AppStyled>
       <Searchbar updateQuery={updateQuery} />

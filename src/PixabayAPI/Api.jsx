@@ -10,6 +10,7 @@ const PixabayAPIRequest = async (query, page) => {
   const response = await axios.get(
     `?q=${query}&page=${page}&key=${key}&image_type=photo&orientation=horizontal&per_page=12`
   );
+  console.log(response.data);
   if (response.data.hits.length === 0) {
     toast(`🦄 ${query} not found Sorry!`, {
       position: 'top-center',
@@ -21,7 +22,6 @@ const PixabayAPIRequest = async (query, page) => {
       progress: undefined,
     });
   }
-
   return response.data;
 };
 
